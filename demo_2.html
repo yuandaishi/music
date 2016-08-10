@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<p class="lyc"></p>
+	</body>
+	<script src="jquery-1.10.2.min.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript">
+		$.ajax({
+			type:"get",
+			url:"zmczx.lrc",
+			async:true,
+			success:function(data){
+				var lrcStr=parseLyric(data);
+				console.log(lrcStr);
+				$(".lyc").text(lrcStr);
+			},
+			error:function(){
+				console.log("链接服务器失败");
+			}
+		});
+		
+		function parseLyric(lrc) {//匹配歌词
+		    var lyrics = lrc.split("\n");
+		    var lrcObj = {};
+		    for(var i=0;i<lyrics.length;i++){
+		        var lyric = decodeURIComponent(lyrics[i]);
+		        var timeReg = /\[\d*:\d*((\.|\:)\d*)*\]/g;
+		        var timeRegExpArr = lyric.match(timeReg);
+		        if(!timeRegExpArr)continue;
+		        var clause = lyric.replace(timeReg,'');
+		
+		        for(var k = 0,h = timeRegExpArr.length;k < h;k++) {
+		            var t = timeRegExpArr[k];
+		            var min = Number(String(t.match(/\[\d*/i)).slice(1)),
+		                sec = Number(String(t.match(/\:\d*/i)).slice(1));
+		            var time = min * 60 + sec;
+		            lrcObj[time] = clause;
+		        }
+		    }
+		    return lrcObj;
+		}
+		
+		
+		function renderLyric(music){//渲染歌词
+		    lyric.html("");
+		    var lyricLineHeight = 27,
+		        offset = lyric_wrap.offset().height*0.4;
+		    music.lyric.fetch(function(data){
+		        music.lyric.parsed = {};
+		        var i = 0;
+		        for(var k in data){
+		            var txt = data[k];
+		            if(!txt)txt = "&nbsp;";
+		            music.lyric.parsed[k] = {
+		                index:i++,
+		                text:txt,
+		                top: i*lyricLineHeight-offset
+		            };
+		            var li = $("<li>"+txt+"</li>");
+		            lyric.append(li);
+		        }
+		        $player.bind("timeupdate",updateLyric);
+		    },function(){
+		        lyric.html("<li style='text-align: center'>歌词加载失败</li>");
+		    });
+		}
+	</script>
+</html>
